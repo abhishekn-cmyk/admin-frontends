@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {toast} from "react-toastify"
 export default function CareerTools() {
   const {
     tools,
@@ -78,45 +79,65 @@ export default function CareerTools() {
     }
   };
 
-  const handleSave = () => {
-    const payload = new FormData();
+ const handleSave = () => {
+  const payload = new FormData();
 
-    // append form fields
-    Object.entries(form).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (typeof value === "object" && key !== "image") {
-          // convert arrays/objects to JSON string
-          payload.append(key, JSON.stringify(value));
-        } else if (key !== "image") {
-          payload.append(key, value.toString());
-        }
+  // append form fields
+  Object.entries(form).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      if (typeof value === "object" && key !== "image") {
+        payload.append(key, JSON.stringify(value));
+      } else if (key !== "image") {
+        payload.append(key, value.toString());
       }
-    });
-
-    // append file if selected
-    if (imageFile) {
-      payload.append("image", imageFile);
     }
+  });
 
-    if (editingTool) {
-      updateToolMutation.mutate(
-        { id: editingTool._id, formData: payload }, // send FormData
-        {
-          onSuccess: () => {
-            setOpen(false);
-            resetForm();
-          },
-        },
-      );
-    } else {
-      addTool.mutate(payload, {
-        onSuccess: () => {
+  // append file if selected
+  if (imageFile) {
+    payload.append("image", imageFile);
+  }
+
+  if (editingTool) {
+    console.log("🟨 Updating tool:", editingTool._id, form);
+    updateToolMutation.mutate(
+      { id: editingTool._id, formData: payload },
+      {
+        onSuccess: (data) => {
+          console.log("✅ Update success:", data);
+          toast.success("Tool updated successfully!");
           setOpen(false);
           resetForm();
         },
-      });
-    }
-  };
+        onError: (error: any) => {
+          console.error("❌ Update failed:", error);
+          console.error("Response:", error?.response?.data);
+          toast.error(
+            `Failed to update: ${error?.response?.data?.message || error.message}`
+          );
+        },
+      }
+    );
+  } else {
+    console.log("🟩 Creating tool:", form);
+    addTool.mutate(payload, {
+      onSuccess: (data) => {
+        console.log("✅ Tool created successfully:", data);
+        toast.success("Tool added successfully!");
+        setOpen(false);
+        resetForm();
+      },
+      onError: (error: any) => {
+        console.error("❌ Tool creation failed:", error);
+        console.error("Response:", error?.response?.data);
+        toast.error(
+          `Failed to create: ${error?.response?.data?.message || error.message}`
+        );
+      },
+    });
+  }
+};
+
 
   if (isLoading) return <p className="text-center">Loading tools...</p>;
 

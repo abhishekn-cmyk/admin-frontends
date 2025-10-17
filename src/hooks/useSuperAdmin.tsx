@@ -20,6 +20,8 @@ export const useLogin = () => {
     onSuccess: (data) => {
       toast.success("Login successful!");
       const { name, email, token } = data?.data;
+      localStorage.setItem("token",token);
+      localStorage.setItem("email",email);
       login({ name: name, email: email, token: token });
       navigate("/dashboard");
     },

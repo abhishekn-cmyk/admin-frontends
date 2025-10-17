@@ -1,39 +1,69 @@
-import axiosInstance from "@/lib/axiosInstance";
-import { Tool } from "@/types/tool";
-import { Category } from "@/types/tool";
+import axios from "axios";
+import { Tool, Category } from "@/types/tool";
+
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
+// Helper: Get Auth Header
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    Authorization: token ? `Bearer ${token}` : "",
+  };
+ 
+};
+
 // Fetch all tools
 export const fetchTools = async (): Promise<Tool[]> => {
-  const { data } = await axiosInstance.get("/tools");
+  const { data } = await axios.get(`${API_URL}/tools`, {
+    headers: getAuthHeaders(),
+  });
   return data.data;
 };
 
 // Create tool (with file upload support)
 export const createTool = async (toolData: FormData): Promise<Tool> => {
-  const { data } = await axiosInstance.post("/tools", toolData, {
-    headers: { "Content-Type": "multipart/form-data" },
+  const { data } = await axios.post(`${API_URL}/tools`, toolData, {
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "multipart/form-data",
+    },
   });
+  console.log("✅ Tool Created:", data);
   return data.data;
 };
 
 // Update tool (with file upload support)
 export const updateTool = async (
   id: string,
-  toolData: FormData,
+  toolData: FormData
 ): Promise<Tool> => {
-  const { data } = await axiosInstance.put(`/tools/${id}`, toolData, {
-    headers: { "Content-Type": "multipart/form-data" },
+  const { data } = await axios.put(`${API_URL}/tools/${id}`, toolData, {
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "multipart/form-data",
+    },
   });
+  console.log("🛠️ Tool Updated:", data);
   return data.data;
 };
 
 // Delete tool
 export const deleteTool = async (id: string): Promise<void> => {
-  await axiosInstance.delete(`/tools/${id}`);
+  const { data } = await axios.delete(`${API_URL}/tools/${id}`, {
+    headers: getAuthHeaders(),
+  });
+  console.log("🗑️ Tool Deleted:", data);
 };
 
+// Add category
 export const addCategory = async (
   toolId: string,
-  category: Category,
+  category: Category
 ): Promise<void> => {
-  await axiosInstance.post(`/tools/${toolId}/categories`, category);
+  const { data } = await axios.post(
+    `${API_URL}/tools/${toolId}/categories`,
+    category,
+    { headers: getAuthHeaders() }
+  );
+  console.log("📁 Category Added:", data);
 };
